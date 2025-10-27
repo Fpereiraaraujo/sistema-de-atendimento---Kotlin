@@ -3,45 +3,40 @@ package com.example.clinica
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.clinica.presentation.theme.ClinicaTheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.clinica.ui.login.WelcomeScreen
+import com.example.clinica.ui.login.AvailabilityScreen
+import com.example.clinica.ui.login.DoctorLoginScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
-            ClinicaTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+            MaterialTheme {
+                Surface {
+                    val navController = rememberNavController()
+                    NavHost(navController = navController, startDestination = "welcome") {
+                        composable("welcome") {
+                            WelcomeScreen(
+                                onDoctorClick = { navController.navigate("doctorLogin") },
+                                onPatientClick = { /* Navigate to patient flow later */ }
+                            )
+                        }
+                        composable("doctorLogin") {
+                            DoctorLoginScreen(
+                                onLoginSuccess = { navController.navigate("availability") }
+                            )
+                        }
+                        composable("availability") {
+                            AvailabilityScreen()
+                        }
+                    }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    ClinicaTheme {
-        Greeting("Android")
     }
 }

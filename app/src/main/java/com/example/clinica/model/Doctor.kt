@@ -4,6 +4,8 @@ data class Doctor(
     val id: Int,
     val name: String,
     val specialty: String,
-    val rating: Double,
-    val availableSlots: List<String>
+    val crm: String,
+    val email: String,
+    val phone: String,
+    val description: String
 )
