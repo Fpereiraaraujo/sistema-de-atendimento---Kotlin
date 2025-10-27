@@ -1,5 +1,7 @@
 package com.example.clinica.data
 
+import com.example.clinica.model.Doctor
+
 object FakeDatabase {
     val doctors = listOf(
         Doctor(1, "Dra. Ana Souza", "Dermatologista", 4.8, listOf("10h", "11h", "15h")),
