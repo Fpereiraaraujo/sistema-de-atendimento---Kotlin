@@ -10,14 +10,16 @@ import androidx.compose.ui.unit.dp
 import com.example.clinica.components.AppointmentCard
 import com.example.clinica.data.FakeDatabase
 
-
 @Composable
 fun ScheduleScreen(doctorId: Int) {
-    val appointments = FakeDatabase.appointments.filter { it.doctorId == doctorId }
 
-    LazyColumn(modifier = Modifier
-        .fillMaxSize()
-        .padding(16.dp)) {
+    val appointments = FakeDatabase.appointments.filter { it.doctorId == doctorId.toString() }
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
         items(appointments) { appointment ->
             AppointmentCard(appointment = appointment)
         }
