@@ -3,13 +3,11 @@ package com.example.clinica.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -79,16 +77,13 @@ fun DoctorRegisterScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Workaround para bug de KeyboardOptions
+                // Senha (sem KeyboardOptions)
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
                     label = { Text("Senha") },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = androidx.compose.ui.text.input.KeyboardOptions.Default.copy(
-                        keyboardType = KeyboardType.Password
-                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -108,14 +103,14 @@ fun DoctorRegisterScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                // Telefone sem KeyboardOptions
                 OutlinedTextField(
                     value = phone,
-                    onValueChange = { phone = it },
+                    onValueChange = { input ->
+                        phone = input.filter { it.isDigit() } // aceita só números
+                    },
                     label = { Text("Telefone") },
                     singleLine = true,
-                    keyboardOptions = androidx.compose.ui.text.input.KeyboardOptions.Default.copy(
-                        keyboardType = KeyboardType.Phone
-                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
 

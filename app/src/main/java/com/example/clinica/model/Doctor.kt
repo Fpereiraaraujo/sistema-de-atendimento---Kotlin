@@ -16,8 +16,11 @@ data class Doctor(
 
 )
 
-// TimeSlot continua igual
-data class TimeSlot(
+
+@Entity
+data class TimeSlotEntity(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val doctorId: Int,
     val day: String,
     val startHour: String,
     val endHour: String

@@ -15,7 +15,7 @@ fun AppNavigation() {
 
     NavHost(navController = navController, startDestination = "doctor_home") {
         composable("doctor_home") {
-            DoctorHomeScreen(navController, doctor)
+            DoctorHomeScreen(doctor, navController)
         }
         composable("schedule") {
             ScheduleScreen(doctor.id)

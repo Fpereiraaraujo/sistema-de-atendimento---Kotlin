@@ -44,7 +44,7 @@ fun DoctorHomeScreen(doctor: Doctor, navController: NavController) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { navController.navigate("availabilityScreen") },
+            onClick = { navController.navigate("doctor_availability/${doctor.id}") },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp),

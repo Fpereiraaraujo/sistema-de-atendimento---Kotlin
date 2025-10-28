@@ -17,6 +17,7 @@ import com.example.clinica.model.Doctor
 import com.example.clinica.screens.*
 import com.example.clinica.screens.doctor.DoctorHomeScreen
 import com.example.clinica.screens.patient.PatientHomeScreen
+import com.example.clinica.ui.login.WelcomeScreen
 import com.example.clinica.ui.login.theme.DoctorAppTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -33,9 +34,9 @@ class MainActivity : ComponentActivity() {
 
                         // Tela de seleção de papel (doutor ou paciente)
                         composable("role_selection") {
-                            RoleSelectionScreen(
-                                onDoctorSelected = { navController.navigate("doctor_login") },
-                                onPatientSelected = { navController.navigate("patient_home") }
+                            WelcomeScreen(
+                                onDoctorClick = { navController.navigate("doctor_login") },
+                                onPatientClick = { navController.navigate("patient_home") }
                             )
                         }
 
@@ -90,15 +91,16 @@ class MainActivity : ComponentActivity() {
 
                         // Tela de disponibilidade do doutor
                         composable("doctor_availability/{doctorId}") { backStackEntry ->
-                            val doctorId =
-                                backStackEntry.arguments?.getString("doctorId")?.toInt() ?: 0
+                            val doctorId = backStackEntry.arguments?.getString("doctorId")?.toIntOrNull()
                             val context = LocalContext.current
                             var doctor by remember { mutableStateOf<Doctor?>(null) }
 
-                            LaunchedEffect(doctorId) {
-                                val db = AppDatabase.getDatabase(context)
-                                doctor = withContext(Dispatchers.IO) {
-                                    db.doctorDao().getDoctorById(doctorId)
+                            if (doctorId != null) {
+                                LaunchedEffect(doctorId) {
+                                    val db = AppDatabase.getDatabase(context)
+                                    doctor = withContext(Dispatchers.IO) {
+                                        db.doctorDao().getDoctorById(doctorId)
+                                    }
                                 }
                             }
 
@@ -112,13 +114,12 @@ class MainActivity : ComponentActivity() {
                                     modifier = Modifier.fillMaxSize(),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    CircularProgressIndicator()
+                                    Text("Erro: Doutor não encontrado")
+                                    // ou CircularProgressIndicator() se estiver carregando
                                 }
                             }
                         }
                     }
-
-
                 }
             }
         }

@@ -4,28 +4,49 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.clinica.data.AppDatabase
 import com.example.clinica.model.Doctor
-import com.example.clinica.model.TimeSlot
+import com.example.clinica.model.TimeSlotEntity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
-fun AvailabilityScreen( doctor: Doctor,
-                        navController: NavController) {
-    var day by remember { mutableStateOf("") }
-    var startHour by remember { mutableStateOf("") }
-    var endHour by remember { mutableStateOf("") }
-    var availability by remember { mutableStateOf(mutableListOf<TimeSlot>()) }
+fun AvailabilityScreen(
+    doctor: Doctor,
+    navController: NavController
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    var day by rememberSaveable { mutableStateOf("") }
+    var startHour by rememberSaveable { mutableStateOf("") }
+    var endHour by rememberSaveable { mutableStateOf("") }
+
+    // Lista observável de horários
+    val availability = remember { mutableStateListOf<TimeSlotEntity>() }
+
+    // Carregar horários do banco ao abrir
+    LaunchedEffect(doctor.id) {
+        val db = AppDatabase.getDatabase(context)
+        val slots = withContext(Dispatchers.IO) {
+            db.timeSlotDao().getTimeSlotsByDoctor(doctor.id)
+        }
+        availability.clear()
+        availability.addAll(slots)
+    }
 
     Column(
         modifier = Modifier
@@ -33,7 +54,7 @@ fun AvailabilityScreen( doctor: Doctor,
             .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
-        // Título moderno
+        // Título
         Text(
             "Adicionar Horário",
             style = MaterialTheme.typography.headlineMedium,
@@ -42,15 +63,21 @@ fun AvailabilityScreen( doctor: Doctor,
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Inputs em Card
+        // Inputs
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
             elevation = CardDefaults.cardElevation(6.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     OutlinedTextField(
                         value = day,
                         onValueChange = { day = it },
@@ -79,8 +106,25 @@ fun AvailabilityScreen( doctor: Doctor,
                 Button(
                     onClick = {
                         if (day.isNotEmpty() && startHour.isNotEmpty() && endHour.isNotEmpty()) {
-                            availability.add(TimeSlot(day, startHour, endHour))
-                            day = ""; startHour = ""; endHour = ""
+                            val slot = TimeSlotEntity(
+                                doctorId = doctor.id,
+                                day = day,
+                                startHour = startHour,
+                                endHour = endHour
+                            )
+
+                            // Salvar no banco e atualizar a UI
+                            scope.launch {
+                                val db = AppDatabase.getDatabase(context)
+                                withContext(Dispatchers.IO) {
+                                    db.timeSlotDao().insert(slot)
+                                }
+                                availability.add(slot)
+                            }
+
+                            day = ""
+                            startHour = ""
+                            endHour = ""
                         }
                     },
                     modifier = Modifier
@@ -103,10 +147,16 @@ fun AvailabilityScreen( doctor: Doctor,
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Lista de horários com LazyColumn
+        // Lista de horários
         if (availability.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Nenhum horário adicionado", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "Nenhum horário adicionado",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {

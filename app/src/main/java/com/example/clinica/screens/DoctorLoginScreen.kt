@@ -3,7 +3,6 @@ package com.example.clinica.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -42,17 +41,19 @@ fun DoctorLoginScreen(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
                 .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(8.dp)
+            shape = RoundedCornerShape(20.dp),
+            elevation = CardDefaults.cardElevation(8.dp),
+            colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface)
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier
+                    .padding(24.dp)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    "Login do Médico",
+                    text = "Login do Médico",
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -65,22 +66,18 @@ fun DoctorLoginScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Workaround para bug de KeyboardOptions
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
                     label = { Text("Senha") },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = androidx.compose.ui.text.input.KeyboardOptions.Default.copy(
-                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Password
-                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 if (errorMessage.isNotEmpty()) {
                     Text(
-                        errorMessage,
+                        text = errorMessage,
                         color = MaterialTheme.colorScheme.error,
                         fontSize = 14.sp
                     )

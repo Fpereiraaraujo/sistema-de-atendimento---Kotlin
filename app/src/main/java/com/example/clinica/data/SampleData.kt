@@ -1,7 +1,7 @@
 package com.example.clinica.data
 
 import com.example.clinica.model.Doctor
-import com.example.clinica.model.TimeSlot
+import com.example.clinica.model.TimeSlotEntity
 
 val sampleDoctor = Doctor(
     id = 1,

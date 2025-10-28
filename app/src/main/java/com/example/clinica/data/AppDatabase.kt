@@ -5,10 +5,12 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.clinica.model.Doctor
+import com.example.clinica.model.TimeSlotEntity
 
-@Database(entities = [Doctor::class], version = 1)
+@Database(entities = [Doctor::class, TimeSlotEntity::class], version = 2)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun doctorDao(): DoctorDao
+    abstract fun timeSlotDao(): TimeSlotDao
 
     companion object {
         @Volatile
@@ -20,10 +22,13 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "clinica_db"
-                ).build()
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }
         }
+
     }
 }
