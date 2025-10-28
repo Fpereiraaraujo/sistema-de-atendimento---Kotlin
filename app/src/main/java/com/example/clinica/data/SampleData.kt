@@ -12,8 +12,5 @@ val sampleDoctor = Doctor(
     phone = "999999999",
     description = "Experienced cardiologist",
     specialty = "Cardiologist",
-    availability = mutableListOf(
-        TimeSlot("Monday", "09:00", "12:00"),
-        TimeSlot("Wednesday", "14:00", "18:00")
-    )
+
 )
