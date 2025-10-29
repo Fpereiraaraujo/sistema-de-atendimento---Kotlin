@@ -18,7 +18,6 @@ fun WelcomeScreen(
     onDoctorClick: () -> Unit,
     onPatientClick: () -> Unit
 ) {
-    // Fundo degradê moderno
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -34,8 +33,7 @@ fun WelcomeScreen(
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .padding(32.dp)
+            modifier = Modifier.padding(32.dp)
         ) {
             Text(
                 text = "Bem-vindo ao ClinicaApp",
@@ -54,7 +52,6 @@ fun WelcomeScreen(
                 modifier = Modifier.padding(bottom = 24.dp)
             )
 
-            // Botão Médico
             Button(
                 onClick = onDoctorClick,
                 shape = RoundedCornerShape(24.dp),
@@ -75,9 +72,8 @@ fun WelcomeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Botão Paciente
             Button(
-                onClick = onPatientClick,
+                onClick = onPatientClick, // agora leva para patient_login
                 shape = RoundedCornerShape(24.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.tertiary

@@ -1,4 +1,4 @@
-package com.example.clinica.screens.auth
+package com.example.clinica.screens.patient
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -10,21 +10,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
 
 @Composable
-fun AuthRegisterScreen(
-    title: String,
-    onSubmit: suspend (name: String, email: String, password: String) -> Boolean,
-    onSuccess: () -> Unit,
-    onBackClick: () -> Unit
+fun PatientRegisterScreen(
+    onRegistered: (patientId: String) -> Unit,
+    onBack: () -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
 
     Box(
         modifier = Modifier
@@ -46,7 +42,7 @@ fun AuthRegisterScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    title,
+                    "Cadastro do Paciente",
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -80,45 +76,42 @@ fun AuthRegisterScreen(
                     Text(errorMessage, color = MaterialTheme.colorScheme.error, fontSize = 14.sp)
                 }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Button(
-                        onClick = onBackClick,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f)
-                    ) { Text("Voltar") }
-
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    Button(
-                        onClick = {
-                            if (name.isBlank() || email.isBlank() || password.isBlank()) {
-                                errorMessage = "Preencha todos os campos"
-                                return@Button
-                            }
-                            errorMessage = ""
-                            isLoading = true
-                            scope.launch {
-                                val ok = onSubmit(name.trim(), email.trim(), password)
-                                isLoading = false
-                                if (ok) onSuccess() else errorMessage = "Não foi possível cadastrar"
-                            }
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        if (isLoading) {
-                            CircularProgressIndicator(
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(24.dp),
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Text("Registrar")
+                // Ações
+                Button(
+                    onClick = {
+                        if (name.isBlank() || email.isBlank() || password.isBlank()) {
+                            errorMessage = "Preencha todos os campos"
+                            return@Button
                         }
+                        isLoading = true
+                        // TODO integrar com repo
+                        isLoading = false
+                        onRegistered(email)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Registrar")
                     }
+                }
+
+                OutlinedButton(
+                    onClick = onBack,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Voltar")
                 }
             }
         }

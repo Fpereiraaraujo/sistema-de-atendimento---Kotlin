@@ -1,4 +1,4 @@
-package com.example.clinica.screens.auth
+package com.example.clinica.screens.patient
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -10,21 +10,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
 
 @Composable
-fun AuthLoginScreen(
-    title: String,
-    onSubmit: suspend (email: String, password: String) -> Boolean,
-    onSuccess: () -> Unit,
-    onAltClick: () -> Unit,
-    altLabel: String = "Criar conta"
+fun PatientLoginScreen(
+    onLogged: (patientId: String) -> Unit,
+    goRegister: () -> Unit,
+    onBackClick: () -> Unit         // ← novo
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
 
     Box(
         modifier = Modifier
@@ -48,7 +44,7 @@ fun AuthLoginScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = title,
+                    text = "Login do Paciente",
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -78,15 +74,18 @@ fun AuthLoginScreen(
                     )
                 }
 
+                // Ações principais
                 Button(
                     onClick = {
                         errorMessage = ""
-                        isLoading = true
-                        scope.launch {
-                            val ok = onSubmit(email.trim(), password)
-                            isLoading = false
-                            if (ok) onSuccess() else errorMessage = "Email ou senha incorretos"
+                        if (email.isBlank() || password.isBlank()) {
+                            errorMessage = "Preencha email e senha"
+                            return@Button
                         }
+                        isLoading = true
+                        // TODO integrar com repo
+                        isLoading = false
+                        onLogged(email)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -104,8 +103,20 @@ fun AuthLoginScreen(
                     }
                 }
 
-                TextButton(onClick = onAltClick) {
-                    Text(altLabel, fontSize = 14.sp)
+                // link registrar
+                TextButton(onClick = goRegister) {
+                    Text("Criar conta", fontSize = 14.sp)
+                }
+
+                // botão Voltar (mesmo padrão visual do cadastro do médico)
+                OutlinedButton(
+                    onClick = onBackClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Voltar")
                 }
             }
         }
