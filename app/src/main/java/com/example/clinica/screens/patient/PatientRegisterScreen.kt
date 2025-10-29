@@ -1,6 +1,5 @@
 package com.example.clinica.screens.patient
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -10,46 +9,65 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.random.Random
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PatientRegisterScreen(
     onRegistered: (patientId: String) -> Unit,
     onBack: () -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
+    var nome by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
+    var senha by remember { mutableStateOf("") }
+    var cpf by remember { mutableStateOf("") }
+
+    // Dropdown de convênio
+    val convenioOptions = listOf(
+        "Unimed",
+        "Amil",
+        "Bradesco Saúde",
+        "SulAmérica Saúde",
+        "Hapvida NotreDame Intermédica",
+        "Prevent Senior",
+        "Porto Seguro Saúde",
+        "Allianz Saúde",
+        "Golden Cross",
+        "São Francisco Saúde"
+    )
+    var convenioExpanded by remember { mutableStateOf(false) }
+    var convenio by remember { mutableStateOf("") }
+
+    var telefone by remember { mutableStateOf("") }
+
+    var erro by remember { mutableStateOf<String?>(null) }
+    var carregando by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+            .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
         Card(
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(8.dp)
+            elevation = CardDefaults.cardElevation(8.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    "Cadastro do Paciente",
+                    text = "Cadastro do Paciente",
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
 
                 OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
+                    value = nome,
+                    onValueChange = { nome = it },
                     label = { Text("Nome completo") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
@@ -64,54 +82,125 @@ fun PatientRegisterScreen(
                 )
 
                 OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
+                    value = senha,
+                    onValueChange = { senha = it },
                     label = { Text("Senha") },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                if (errorMessage.isNotEmpty()) {
-                    Text(errorMessage, color = MaterialTheme.colorScheme.error, fontSize = 14.sp)
-                }
+                OutlinedTextField(
+                    value = cpf,
+                    onValueChange = { input -> cpf = input.filter { it.isDigit() }.take(11) },
+                    label = { Text("CPF (apenas números)") },
+                    singleLine = true,
+                    supportingText = { if (cpf.isNotBlank()) Text("${cpf.length}/11") },
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-                // Ações
-                Button(
-                    onClick = {
-                        if (name.isBlank() || email.isBlank() || password.isBlank()) {
-                            errorMessage = "Preencha todos os campos"
-                            return@Button
-                        }
-                        isLoading = true
-                        // TODO integrar com repo
-                        isLoading = false
-                        onRegistered(email)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(12.dp)
+                // === Convênio (Dropdown) ===
+                ExposedDropdownMenuBox(
+                    expanded = convenioExpanded,
+                    onExpandedChange = { convenioExpanded = !convenioExpanded }
                 ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(24.dp),
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text("Registrar")
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth(),
+                        readOnly = true,
+                        value = convenio,
+                        onValueChange = {},
+                        label = { Text("Convênio") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = convenioExpanded) }
+                    )
+                    ExposedDropdownMenu(
+                        expanded = convenioExpanded,
+                        onDismissRequest = { convenioExpanded = false }
+                    ) {
+                        convenioOptions.forEach { opt ->
+                            DropdownMenuItem(
+                                text = { Text(opt) },
+                                onClick = {
+                                    convenio = opt
+                                    convenioExpanded = false
+                                }
+                            )
+                        }
                     }
                 }
 
-                OutlinedButton(
-                    onClick = onBack,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    shape = RoundedCornerShape(12.dp)
+                OutlinedTextField(
+                    value = telefone,
+                    onValueChange = { input -> telefone = input.filter { it.isDigit() }.take(11) },
+                    label = { Text("Telefone (apenas números)") },
+                    singleLine = true,
+                    supportingText = { if (telefone.isNotBlank()) Text("${telefone.length}/11") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                if (erro != null) {
+                    Text(
+                        text = erro!!,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 14.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text("Voltar")
+                    OutlinedButton(
+                        onClick = onBack,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp)
+                    ) { Text("Voltar") }
+
+                    Button(
+                        onClick = {
+                            // Validações
+                            if (nome.isBlank() || email.isBlank() || senha.isBlank()) {
+                                erro = "Preencha nome, email e senha."
+                                return@Button
+                            }
+                            if (convenio.isBlank()) {
+                                erro = "Selecione um convênio."
+                                return@Button
+                            }
+                            if (telefone.length < 10) {
+                                erro = "Telefone inválido. Use DDD + número (10 ou 11 dígitos)."
+                                return@Button
+                            }
+                            if (cpf.isNotBlank() && cpf.length != 11) {
+                                erro = "CPF deve ter 11 dígitos (apenas números)."
+                                return@Button
+                            }
+
+                            erro = null
+                            carregando = true
+
+                            // Integrar com repositório/Room aqui, se necessário.
+                            val generatedId = "p" + Random.nextInt(100000, 999999)
+
+                            carregando = false
+                            onRegistered(generatedId)
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        if (carregando) {
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        } else {
+                            Text("Registrar")
+                        }
+                    }
                 }
             }
         }
