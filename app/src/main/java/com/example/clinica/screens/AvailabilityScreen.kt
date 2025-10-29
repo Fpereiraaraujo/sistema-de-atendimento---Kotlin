@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -22,6 +21,9 @@ import com.example.clinica.model.TimeSlotEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.*
+import androidx.compose.foundation.text.KeyboardOptions
 
 @Composable
 fun AvailabilityScreen(
@@ -34,11 +36,11 @@ fun AvailabilityScreen(
     var day by rememberSaveable { mutableStateOf("") }
     var startHour by rememberSaveable { mutableStateOf("") }
     var endHour by rememberSaveable { mutableStateOf("") }
+    var showErrorDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
 
-    // Lista observável de horários
     val availability = remember { mutableStateListOf<TimeSlotEntity>() }
 
-    // Carregar horários do banco ao abrir
     LaunchedEffect(doctor.id) {
         val db = AppDatabase.getDatabase(context)
         val slots = withContext(Dispatchers.IO) {
@@ -48,13 +50,46 @@ fun AvailabilityScreen(
         availability.addAll(slots)
     }
 
+    fun formatDateInput(input: String): String {
+        val digits = input.filter { it.isDigit() }.take(4)
+        return when (digits.length) {
+            in 1..2 -> digits
+            in 3..4 -> "${digits.take(2)}/${digits.drop(2)}"
+            else -> digits
+        }
+    }
+
+    fun formatTimeInput(input: String): String {
+        val digits = input.filter { it.isDigit() }.take(4)
+        return when (digits.length) {
+            in 1..2 -> digits
+            in 3..4 -> "${digits.take(2)}:${digits.drop(2)}"
+            else -> digits
+        }
+    }
+
+    fun isDateInPast(dateString: String): Boolean {
+        return try {
+            val formatter = SimpleDateFormat("dd/MM", Locale.getDefault())
+            val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+            val inputDate = formatter.parse(dateString)
+            val inputCalendar = Calendar.getInstance().apply {
+                time = inputDate!!
+                set(Calendar.YEAR, currentYear)
+            }
+            val today = Calendar.getInstance()
+            inputCalendar.before(today)
+        } catch (e: Exception) {
+            true // Se der erro no parse, consideramos inválida
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
-        // Título
         Text(
             "Adicionar Horário",
             style = MaterialTheme.typography.headlineMedium,
@@ -63,7 +98,6 @@ fun AvailabilityScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Inputs
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
@@ -80,23 +114,29 @@ fun AvailabilityScreen(
                 ) {
                     OutlinedTextField(
                         value = day,
-                        onValueChange = { day = it },
-                        label = { Text("Dia") },
+                        onValueChange = { newValue ->
+                            day = formatDateInput(newValue)
+                        },
+                        label = { Text("Dia (dd/mm)") },
                         modifier = Modifier.weight(1f),
                         singleLine = true
                     )
                     OutlinedTextField(
                         value = startHour,
-                        onValueChange = { startHour = it },
-                        label = { Text("Início") },
+                        onValueChange = { newValue ->
+                            startHour = formatTimeInput(newValue)
+                        },
+                        label = { Text("Início (hh:mm)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.weight(1f),
                         singleLine = true
                     )
                     OutlinedTextField(
                         value = endHour,
-                        onValueChange = { endHour = it },
-                        label = { Text("Fim") },
+                        onValueChange = { newValue ->
+                            endHour = formatTimeInput(newValue)
+                        },
+                        label = { Text("Fim (hh:mm)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.weight(1f),
                         singleLine = true
@@ -106,25 +146,29 @@ fun AvailabilityScreen(
                 Button(
                     onClick = {
                         if (day.isNotEmpty() && startHour.isNotEmpty() && endHour.isNotEmpty()) {
-                            val slot = TimeSlotEntity(
-                                doctorId = doctor.id,
-                                day = day,
-                                startHour = startHour,
-                                endHour = endHour
-                            )
+                            if (isDateInPast(day)) {
+                                errorMessage = "Você não pode cadastrar uma disponibilidade em um dia anterior ao atual."
+                                showErrorDialog = true
+                            } else {
+                                val slot = TimeSlotEntity(
+                                    doctorId = doctor.id,
+                                    day = day,
+                                    startHour = startHour,
+                                    endHour = endHour
+                                )
 
-                            // Salvar no banco e atualizar a UI
-                            scope.launch {
-                                val db = AppDatabase.getDatabase(context)
-                                withContext(Dispatchers.IO) {
-                                    db.timeSlotDao().insert(slot)
+                                scope.launch {
+                                    val db = AppDatabase.getDatabase(context)
+                                    withContext(Dispatchers.IO) {
+                                        db.timeSlotDao().insert(slot)
+                                    }
+                                    availability.add(slot)
                                 }
-                                availability.add(slot)
-                            }
 
-                            day = ""
-                            startHour = ""
-                            endHour = ""
+                                day = ""
+                                startHour = ""
+                                endHour = ""
+                            }
                         }
                     },
                     modifier = Modifier
@@ -147,7 +191,6 @@ fun AvailabilityScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Lista de horários
         if (availability.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -190,4 +233,20 @@ fun AvailabilityScreen(
             }
         }
     }
-}
+
+    if (showErrorDialog) {
+        AlertDialog(
+            onDismissRequest = { showErrorDialog = false },
+            confirmButton = {
+                TextButton(onClick = { showErrorDialog = false }) {
+                    Text("OK")
+                }
+            },
+            title = { Text("Data inválida") },
+            text = { Text(errorMessage) },
+            shape = RoundedCornerShape(16.dp),
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    }
+
+    }
